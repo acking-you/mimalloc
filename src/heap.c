@@ -26,7 +26,7 @@ typedef bool (heap_page_visitor_fun)(mi_heap_t* heap, mi_page_queue_t* pq, mi_pa
 // Visit all pages in a heap; returns `false` if break was called.
 static bool mi_heap_visit_pages(mi_heap_t* heap, heap_page_visitor_fun* fn, bool include_full, void* arg1, void* arg2)
 {
-  if (heap==NULL || heap->page_count==0) return 0;
+  if (heap==NULL || heap->page_count==0) return true;
 
   // visit all pages
   #if MI_DEBUG>1
@@ -155,7 +155,11 @@ static void mi_heap_collect_ex(mi_heap_t* heap, mi_collect_t collect)
 
   // free all current thread delayed blocks.
   // (if abandoning, after this there are no more thread-delayed references into the pages.)
-  _mi_heap_delayed_free_all(heap);
+  if (collect >= MI_ABANDON) {
+    _mi_heap_delayed_free_all(heap);      // free all
+  } else {
+    _mi_heap_delayed_free_partial(heap);  // best-effort; contended blocks are retried next time
+  }
 
   // collect retired pages
   _mi_heap_collect_retired(heap, force);
