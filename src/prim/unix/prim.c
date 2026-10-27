@@ -389,6 +389,9 @@ static void* unix_mmap(void* addr, size_t size, size_t try_alignment, int protec
       }
     }
   } // huge pages
+  #else
+  MI_UNUSED(large_only);
+  MI_UNUSED(allow_large);
   #endif
   // regular allocation
   if (p == NULL) {
